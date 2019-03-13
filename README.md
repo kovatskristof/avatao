@@ -5,12 +5,61 @@
  
  ----
  
- As we have already isntalled and started up Vault in the previous module, we will start with initializing and unsealing it. We need to set the follwing environment variables;
+In the previous module we have installed Vault.Now we have to start it up with the following command:
+
+```shell
+  $ vault server -dev
+```
+
+This will give you back information about the server. You will need the Api Address, the Unseal Key and the Root Token later for configuration.
+
+```shell
+==> Vault server configuration:
+
+             Api Address: http://127.0.0.1:8200
+                     Cgo: disabled
+         Cluster Address: https://127.0.0.1:8201
+              Listener 1: tcp (addr: "127.0.0.1:8200", cluster address: "127.0.0.1:8201", max_request_duration: "1m30s", max_request_size: "33554432", tls: "disabled")
+               Log Level: (not set)
+                   Mlock: supported: false, enabled: false
+                 Storage: inmem
+                 Version: Vault v1.0.2
+             Version Sha: 37a1dc9c477c1c68c022d2084550f25bf20cac33
+
+WARNING! dev mode is enabled! In this mode, Vault runs entirely in-memory
+and starts unsealed with a single unseal key. The root token is already
+authenticated to the CLI, so you can immediately begin using Vault.
+
+You may need to set the following environment variable:
+
+    $ export VAULT_ADDR='http://127.0.0.1:8200'
+
+The unseal key and root token are displayed below in case you want to
+seal/unseal the Vault or re-authenticate.
+
+Unseal Key: 1+yv+v5mz+aSCK67X6slL3ECxb4UDL8ujWZU/ONBpn0=
+Root Token: s.XmpNPoi9sRhYtdKHaQhkHP6x
+
+Development mode should NOT be used in production installations!
+
+==> Vault server started! Log data will stream in below:
+
+```
+
+As Vault has advised in the server startup output, we should set the following environment variables:
+
 ```shell
   $ export VAULT_ADDR="http://127.0.0.1:8200"
 ```
+
+You will now need to assign the Root Token value to VAULT_TOKEN:
+
 ```shell
-  $ export VAULT_TOKEN=`cat ${2} |jq -r .root_token`
+  $ export VAULT_TOKEN=s.XmpNPoi9sRhYtdKHaQhkHP6x
 ```
 
+Now we need to unseal Vault using the unseal key:
 
+```shell
+  $ vault operator unseal
+```
