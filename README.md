@@ -222,13 +222,13 @@ Locate or generate the SSH public key. Usually this is ~/.ssh/id_rsa.pub. If you
 Ask Vault to sign your public key. This file usually ends in .pub and the contents begin with ssh-rsa ....
 
 ```shell
-$ vault write ssh-client-signer/sign/my-role \
-    public_key=@$HOME/.ssh/id_rsa.pub
+   $ vault write ssh-client-signer/sign/my-role \
+       public_key=@$HOME/.ssh/id_rsa.pub
 
-Key             Value
----             -----
-serial_number   c73f26d2340276aa
-signed_key      ssh-rsa-cert-v01@openssh.com AAAAHHNzaC1...
+   Key             Value
+   ---             -----
+   serial_number   c73f26d2340276aa
+   signed_key      ssh-rsa-cert-v01@openssh.com AAAAHHNzaC1...
 ```
 
 The result will include the serial and the signed key. This signed key is another public key.
@@ -250,14 +250,14 @@ To customize the signing options, use a JSON payload:
 Save the resulting signed, public key to disk. Limit permissions as needed.
 
 ```shell
-$ vault write -field=signed_key ssh-client-signer/sign/my-role \
-    public_key=@$HOME/.ssh/id_rsa.pub > signed-cert.pub
+   $ vault write -field=signed_key ssh-client-signer/sign/my-role \
+      public_key=@$HOME/.ssh/id_rsa.pub > signed-cert.pub
 ```
 
 SSH into the host machine using the signed key. You must supply both the signed public key from Vault and the corresponding private key as authentication to the SSH call.
 
 ```shell
-$ ssh -i signed-cert.pub -i ~/.ssh/id_rsa avatao@10.0.23.5
+   $ ssh -i signed-cert.pub -i ~/.ssh/id_rsa avatao@10.0.23.5
 ```
 
 Here we are, logged in to our instance with Vault SSH Certificate.
