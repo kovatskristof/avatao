@@ -1,5 +1,6 @@
 # Vault SSH Secrets Engine
 
+
    The Vault SSH secrets engine is a great way to provide secure authentication and authorization for accessing machines via SSH protocol.
    In this example we will setup a one-time SSH password and also set a time-to-live value for it.
  
@@ -77,7 +78,10 @@ Now we need to unseal Vault using the unseal key:
    HA Enabled      false
 ```
 
+
+
 ## Auditing Vault
+
 
 There is a high chance, that you will need information about who and when accessed you instances. Vault has a solution for that. In the next section we will learn how to enable Vault's auditing device. By default, this feature is disabled.
 
@@ -89,7 +93,9 @@ There is a high chance, that you will need information about who and when access
 From now on you will have logs from any actions made by Vault.
 
 
+
 ## One-Time Password for SSH
+
 
 We have arrived to configuring the One-Time Password solution for using SSH for logging in to our instances.
 SSH Sercrets engine needs to be enabled.
@@ -143,7 +149,9 @@ A single CLI command can be used to create a new OTP and invoke SSH with the cor
 ```
 
 
+
 ## Signed SSH Certificates
+
 
 Vault also also has solution for Signing SSH Certificates. There is an option to set a Time To Live (TTL) vslue for these certs. In the following example we will configure a role with these features.
 Again, SSH Secrets engine needs to be mounted before use.
@@ -179,7 +187,10 @@ Add the path where the public key contents are stored to the SSH configuration f
 
 Restart the SSH service to pick up the changes.
 
+
+
 ### Client SSH Authentication
+
 
 Now we should create a role for signing client keys. You can specify here the Time To Live value, in our case it will be 30 minutes. "ttl": "30m0s"
 
