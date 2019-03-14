@@ -88,7 +88,56 @@ There is a high chance, that you will need information about who and when access
 
 From now on you will have logs from any actions made by Vault.
 
-----
 
-# One-Time Password
+# One-Time Password for SSH
 
+We have arrived to configuring the One-Time Password solution for using SSH for logging in to our instances.
+SSH Sercrets engine needs to be enabled.
+
+```shell
+   $ vault secrets enable ssh
+   Successfully mounted 'ssh' at 'ssh'!
+```
+
+To create One-Time Password role the key_type parameter must be otp and the default_user must be also defined. It could be a specific user or user groups as well. In this example we will create an "avatao" user with otp. All of the machines represented by the role's CIDR list should have [Vault-SSH-Helper](https://github.com/hashicorp/vault-ssh-helper) properly installed and configured.
+
+```shell
+   $ vault write ssh/roles/otp_key_role \
+      key_type=otp \
+      default_user=avatao \
+      cidr_list=x.x.x.x/y,m.m.m.m/n
+   Success! Data written to: ssh/roles/otp_key_role
+```
+
+The next step is to create credential for loging in to our remote instance. For that, Vault uses write command.
+
+```shell
+   $ vault write ssh/creds/otp_key_role ip=x.x.x.x
+   Key             Value
+   lease_id        ssh/creds/otp_key_role/73bbf513-9606-4bec-816c-5a2f009765a5
+   lease_duration  600
+   lease_renewable false
+   port            22
+   username        avatao
+   ip              x.x.x.x
+   key             2f7e25a2-24c9-4b7b-0d35-27d5e5203a5c
+   key_type        otp
+```
+
+The key will be our password, so you should pass that when you are establishing the SSH connection.
+
+```shell
+   $ ssh avatao@x.x.x.x
+   Password: <Enter OTP>
+   avatao@x.x.x.x:~$
+```
+
+We have successfully logged in to our instance with One-Time Password.
+A single CLI command can be used to create a new OTP and invoke SSH with the correct parameters to connect to the host.
+
+```shell
+   $ vault ssh -role otp_key_role -mode otp avatao@x.x.x.x
+   OTP for the session is `b4d47e1b-4879-5f4e-ce5c-7988d7986f37`
+   [Note: Install `sshpass` to automate typing in OTP]
+   Password: <Enter OTP>
+```
