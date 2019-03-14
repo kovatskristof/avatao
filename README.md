@@ -77,7 +77,7 @@ Now we need to unseal Vault using the unseal key:
    HA Enabled      false
 ```
 
-# Auditing Vault
+## Auditing Vault
 
 There is a high chance, that you will need information about who and when accessed you instances. Vault has a solution for that. In the next section we will learn how to enable Vault's auditing device. By default, this feature is disabled.
 
@@ -89,7 +89,7 @@ There is a high chance, that you will need information about who and when access
 From now on you will have logs from any actions made by Vault.
 
 
-# One-Time Password for SSH
+## One-Time Password for SSH
 
 We have arrived to configuring the One-Time Password solution for using SSH for logging in to our instances.
 SSH Sercrets engine needs to be enabled.
@@ -141,3 +141,112 @@ A single CLI command can be used to create a new OTP and invoke SSH with the cor
    [Note: Install `sshpass` to automate typing in OTP]
    Password: <Enter OTP>
 ```
+
+
+## Signed SSH Certificates
+
+Vault also also has solution for Signing SSH Certificates. There is an option to set a Time To Live (TTL) vslue for these certs. In the following example we will configure a role with these features.
+Again, SSH Secrets engine needs to be mounted before use.
+
+```shell
+   $ vault secrets enable -path=ssh-client-signer ssh
+   Successfully mounted 'ssh' at 'ssh-client-signer'!
+```
+
+This enables the SSH secrets engine at the path "ssh-client-signer".
+Configure Vault with a CA for signing client keys using the /config/ca endpoint. If you do not have an internal CA, Vault can generate a keypair for you.
+
+```shell
+   $ vault write ssh-client-signer/config/ca generate_signing_key=true
+   Key             Value
+   ---             -----
+   public_key      ssh-rsa AAAAB3NzaC1yc2EA...
+```
+Add the public key to all target host's SSH configuration. This process can be manual or automated using a configuration management tool. The public key is accessible via the API and does not require authentication.
+
+```shell
+   $ curl -o /etc/ssh/trusted-user-ca-keys.pem http://127.0.0.1:8200/v1/ssh-client-signer/public_key
+   $ vault read -field=public_key ssh-client-signer/config/ca > /etc/ssh/trusted-user-ca-keys.pem
+```
+
+Add the path where the public key contents are stored to the SSH configuration file as the TrustedUserCAKeys option.
+
+```shell
+   # /etc/ssh/sshd_config
+   # ...
+   TrustedUserCAKeys /etc/ssh/trusted-user-ca-keys.pem
+```
+
+Restart the SSH service to pick up the changes.
+
+### Client SSH Authentication
+
+Now we should create a role for signing client keys. You can specify here the Time To Live value, in our case it will be 30 minutes. "ttl": "30m0s"
+
+```shell
+   $ vault write ssh-client-signer/roles/my-role -<<"EOH"
+   {
+     "allow_user_certificates": true,
+     "allowed_users": "*",
+     "default_extensions": [
+       {
+         "permit-pty": ""
+       }
+     ],
+     "key_type": "ca",
+     "default_user": "ubuntu",
+     "ttl": "30m0s"
+   }
+   EOH
+```
+
+After we have configured Vault, we need to perform the following steps on client's work station who will login to the instance managed by Vault.
+
+Locate or generate the SSH public key. Usually this is ~/.ssh/id_rsa.pub. If you do not have an SSH keypair, generate one:
+
+```shell
+   $ ssh-keygen -t rsa -C "avatao@avatao.com"
+```
+
+Ask Vault to sign your public key. This file usually ends in .pub and the contents begin with ssh-rsa ....
+
+```shell
+$ vault write ssh-client-signer/sign/my-role \
+    public_key=@$HOME/.ssh/id_rsa.pub
+
+Key             Value
+---             -----
+serial_number   c73f26d2340276aa
+signed_key      ssh-rsa-cert-v01@openssh.com AAAAHHNzaC1...
+```
+
+The result will include the serial and the signed key. This signed key is another public key.
+To customize the signing options, use a JSON payload:
+
+```shell
+   $ vault write ssh-client-signer/sign/my-role -<<"EOH"
+   {
+     "public_key": "ssh-rsa AAA...",
+     "valid_principals": "my-user",
+     "key_id": "custom-prefix",
+     "extension": {
+       "permit-pty": ""
+     }
+   }
+   EOH
+```
+
+Save the resulting signed, public key to disk. Limit permissions as needed.
+
+```shell
+$ vault write -field=signed_key ssh-client-signer/sign/my-role \
+    public_key=@$HOME/.ssh/id_rsa.pub > signed-cert.pub
+```
+
+SSH into the host machine using the signed key. You must supply both the signed public key from Vault and the corresponding private key as authentication to the SSH call.
+
+```shell
+$ ssh -i signed-cert.pub -i ~/.ssh/id_rsa avatao@10.0.23.5
+```
+
+Here we are, logged in to our instance with Vault SSH Certificate.
