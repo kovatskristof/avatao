@@ -34,6 +34,8 @@ You may need to set the following environment variable:
 
     $ export VAULT_ADDR='http://127.0.0.1:8200'
 
+You can check the Vault UI by hitting http://127.0.0.1:8200 to your browser. It will request you to pass your Root Token. With giving that, you can login to the Vault UI.
+
 The unseal key and root token are displayed below in case you want to
 seal/unseal the Vault or re-authenticate.
 
@@ -62,4 +64,31 @@ Now we need to unseal Vault using the unseal key:
 
 ```shell
   $ vault operator unseal
+   Unseal Key (will be hidden):
+   Key             Value
+   ---             -----
+   Seal Type       shamir
+   Sealed          false
+   Total Shares    1
+   Threshold       1
+   Version         1.0.1
+   Cluster Name    vault-cluster-36379e64
+   Cluster ID      5b9ab5c2-fd50-46d8-c016-3411c04570bc
+   HA Enabled      false
 ```
+
+# Auditing Vault
+
+There is a high chance, that you will need information about who and when accessed you instances. Vault has a solution for that. In the next section we will learn how to enable Vault's auditing device. By default, this feature is disabled.
+
+```shell
+   $ vault audit enable syslog
+   Success! Enabled the syslog audit device at: syslog/
+```
+
+From now on you will have logs from any actions made by Vault.
+
+----
+
+# One-Time Password
+
