@@ -78,7 +78,7 @@ ADD config.hcl config.hcl
 
 # By default you'll get a single-node development server that stores everything
 # in RAM and bootstraps itself. Don't use this configuration for production.
-CMD ["server", "-config=config.hcl"]
+CMD ["server", "-dev"]
 
 ENV VAULT_ADDR="http://127.0.0.1:8200"
 ENV VAULT_TOKEN=$HOME/.vault-token
